@@ -19,7 +19,7 @@ gov.usgs = gov.usgs || {};
 gov.usgs.quakesUrl = 'https://soda.demo.socrata.com/resource/earthquakes.json?$$app_token=Hwu90cjqyFghuAWQgannew7Oi';
 
 //current earthquake dataset (array of objects, each representing an earthquake)
-gov.usgs.quakes;
+gov.usgs.quakes = [];
 
 //reference to our google map
 gov.usgs.quakesMap;
@@ -32,20 +32,34 @@ $(document).ajaxError(function(event, jqXHR, err){
 
 $(function(){
 	getQuakes();
+
+	$('.refresh-button').click(function(){
+		getQuakes($('.min-magnitude').val());
+	});
 });
 
-function getQuakes() {
-	$.getJSON(gov.usgs.quakesUrl, function(quakes){
+function getQuakes(minMagnitude) {
+	var url = gov.usgs.quakesUrl;
+	if (minMagnitude) {
+		url += '&$where=magnitude>=' + minMagnitude;
+	}
+
+	$.getJSON(url, function(quakes){
+		for (var i = 0; i < gov.usgs.quakes.length; i++) {
+			gov.usgs.quakes[i].mapMarker.setMap(null);
+		}
 		gov.usgs.quakes = quakes;
 
 		$('.message').html('Displaying ' + quakes.length + ' earthquakes');
 
-		gov.usgs.quakesMap = new google.maps.Map($('.map-container')[0], {
-			center: new google.maps.LatLng(0,0),
-			zoom: 2,
-			mapTypeId: google.maps.MapTypeId.TERRAIN,
-			streetViewControl: false
-		});
+		if (!gov.usgs.quakesMap) {
+			gov.usgs.quakesMap = new google.maps.Map($('.map-container')[0], {
+				center: new google.maps.LatLng(0,0),
+				zoom: 2,
+				mapTypeId: google.maps.MapTypeId.TERRAIN,
+				streetViewControl: false
+			});
+		}
 
 		addQuakeMarkers(gov.usgs.quakes, gov.usgs.quakesMap);
 	});
@@ -70,6 +84,10 @@ function addQuakeMarkers(quakes, map) {
 
 function registerInfoWindow(map, marker, infoWindow) {
 	google.maps.event.addListener(marker, 'click', function(){
+		if (gov.usgs.iw) {
+			gov.usgs.iw.close();
+		}
+		gov.usgs.iw = infoWindow;
 		infoWindow.open(map, marker);
 	});
 }
