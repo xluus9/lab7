@@ -30,6 +30,7 @@ $(document).ajaxError(function(event, jqXHR, err){
     alert('Problem obtaining data: ' + jqXHR.statusText);
 });
 
+//document ready function
 $(function(){
 	getQuakes();
 
@@ -38,12 +39,15 @@ $(function(){
 	});
 });
 
+//uses JSON to get earthquake data
+//place a marker on a google map
 function getQuakes(minMagnitude) {
 	var url = gov.usgs.quakesUrl;
 	if (minMagnitude) {
 		url += '&$where=magnitude>=' + minMagnitude;
 	}
 
+	//gets earthquake data
 	$.getJSON(url, function(quakes){
 		for (var i = 0; i < gov.usgs.quakes.length; i++) {
 			gov.usgs.quakes[i].mapMarker.setMap(null);
@@ -52,6 +56,7 @@ function getQuakes(minMagnitude) {
 
 		$('.message').html('Displaying ' + quakes.length + ' earthquakes');
 
+		//creates google map
 		if (!gov.usgs.quakesMap) {
 			gov.usgs.quakesMap = new google.maps.Map($('.map-container')[0], {
 				center: new google.maps.LatLng(0,0),
@@ -65,6 +70,7 @@ function getQuakes(minMagnitude) {
 	});
 }
 
+//creates the marker and the infoWindow
 function addQuakeMarkers(quakes, map) {
 	$.each(quakes, function(){
 		if (this.location) {
@@ -82,6 +88,7 @@ function addQuakeMarkers(quakes, map) {
 	});
 }
 
+//opens the infoWindow when marker is clicked
 function registerInfoWindow(map, marker, infoWindow) {
 	google.maps.event.addListener(marker, 'click', function(){
 		if (gov.usgs.iw) {
